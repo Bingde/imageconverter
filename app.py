@@ -1,7 +1,6 @@
 from flask import Flask, session, request, send_file, render_template, redirect, url_for, jsonify, session
 from datetime import datetime, timedelta
 import threading
-from flask_session import Session
 import time
 import pytesseract
 from PIL import Image
@@ -40,9 +39,6 @@ if not app.debug:
     ))
     app.logger.addHandler(file_handler)
 
-# Configure server-side sessions
-app.config["SESSION_TYPE"] = "filesystem"  # Store sessions on the filesystem
-Session(app)
 
 # Set up folders
 UPLOAD_FOLDER = "uploads"
@@ -168,67 +164,6 @@ def sanitize_filename(filename):
     sanitized = re.sub(r"[^\w.-]", "_", filename)
     return sanitized
 
-def cleanup_files():
-    print("Cleanup thread started.")  # Debugging statement
-    with app.app_context():
-        while True:
-            now = datetime.now()
-            print("Cleanup thread running...")  # Debugging statement
-            
-            # Check PDF files
-            if "pdf_files" in session:
-                print("Found PDF files in session.")  # Debugging statement
-                file_info = session["pdf_files"]
-                uploaded_path = file_info["uploaded_path"]
-                compressed_path = file_info["compressed_path"]
-                file_timestamp = datetime.fromisoformat(file_info["timestamp"])
-                
-                if now - file_timestamp > timedelta(minutes=2):
-                    print("Deleting PDF files...")  # Debugging statement
-                    # Delete uploaded file
-                    if os.path.exists(uploaded_path):
-                        os.remove(uploaded_path)
-                        print(f"Deleted uploaded file: {uploaded_path}")
-                    
-                    # Delete compressed file
-                    if os.path.exists(compressed_path):
-                        os.remove(compressed_path)
-                        print(f"Deleted compressed file: {compressed_path}")
-                    
-                    # Remove the session entry
-                    session.pop("pdf_files", None)
-                    print("Removed PDF files from session.")
-            
-            # Check Excel files
-            if "excel_files" in session:
-                print("Found Excel files in session.")  # Debugging statement
-                file_info = session["excel_files"]
-                uploaded_path = file_info["uploaded_path"]
-                excel_path = file_info["excel_path"]
-                file_timestamp = datetime.fromisoformat(file_info["timestamp"])
-                
-                if now - file_timestamp > timedelta(minutes=2):
-                    print("Deleting Excel files...")  # Debugging statement
-                    # Delete uploaded file
-                    if os.path.exists(uploaded_path):
-                        os.remove(uploaded_path)
-                        print(f"Deleted uploaded file: {uploaded_path}")
-                    
-                    # Delete Excel file
-                    if os.path.exists(excel_path):
-                        os.remove(excel_path)
-                        print(f"Deleted Excel file: {excel_path}")
-                    
-                    # Remove the session entry
-                    session.pop("excel_files", None)
-                    print("Removed Excel files from session.")
-            
-            # Wait for 1 minute before checking again
-            time.sleep(60)
-
-# Start the cleanup thread
-cleanup_thread = threading.Thread(target=cleanup_files, daemon=True)
-cleanup_thread.start()
 
 def calculate_reduction_percentage(original_size, compressed_size):
     """
@@ -297,12 +232,6 @@ def compress():
             # Calculate the percentage reduction
             reduction_percentage = calculate_reduction_percentage(original_size, compressed_size)
             
-            # Store both uploaded and compressed file paths in the session
-            session["pdf_files"] = {
-                "uploaded_path": upload_path,
-                "compressed_path": compressed_path,
-                "timestamp": datetime.now().isoformat()
-            }
             
             # Render the template with file sizes, reduction percentage, and download link
             return render_template(
@@ -337,12 +266,6 @@ def image_to_excel_route():
             # Convert image to Excel
             image_to_excel(upload_path, excel_path)
             
-            # Store both uploaded and Excel file paths in the session
-            session["excel_files"] = {
-                "uploaded_path": upload_path,
-                "excel_path": excel_path,
-                "timestamp": datetime.now().isoformat()
-            }
             
             # Redirect to the download page
             return redirect(url_for("download", filename=excel_filename, type="excel"))
