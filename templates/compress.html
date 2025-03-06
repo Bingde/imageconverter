@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compress PDF</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <a href="{{ url_for('compress') }}">Compress PDF</a>
+            <a href="{{ url_for('image_to_excel_route') }}">Convert Image to Excel</a>
+        </nav>
+        <h1>Compress PDF</h1>
+        <form method="POST" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".pdf" required>
+            <br>
+            <label for="quality">Select Compression Quality:</label>
+            <select name="quality" id="quality" required>
+                <option value="10">Low (High Compression, Lower Quality)</option>
+                <option value="50">Medium (Balanced Compression and Quality)</option>
+                <option value="90">High (Low Compression, Higher Quality)</option>
+            </select>
+            <br>
+            <button type="submit">Compress PDF</button>
+        </form>
+
+        <!-- Display file sizes and reduction percentage -->
+        {% if original_size and compressed_size and reduction_percentage %}
+            <div class="result">
+                <p>Your PDF is now <strong>{{ reduction_percentage }}%</strong> smaller!</p>
+                <p>{{ original_size }} MB → {{ compressed_size }} MB</p>
+                <p>SAVED: {{ original_size - compressed_size }} MB</p>
+            </div>
+        {% endif %}
+
+        <!-- Download link -->
+        {% if download_link %}
+            <a href="{{ download_link }}">Download Compressed PDF</a>
+        {% endif %}
+    </div>
+</body>
+</html>

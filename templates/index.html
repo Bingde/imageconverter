@@ -3,119 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image to Excel Converter</title>
+    <title>Multi-Tool Application</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <div class="container">
-        <h1>Image to Excel Converter</h1>
-        <p>Upload an image containing a table, and download it as an Excel file.</p>
-        
-        <!-- File Upload Form -->
-        <form id="uploadForm">
-            <input type="file" id="imageFile" accept="image/*" required>
-            <button type="submit">Convert to Excel</button>
-        </form>
-
-        <!-- Image Preview -->
-        <div id="imagePreview" style="margin-top: 20px; display: none;">
-            <h3>Uploaded Image:</h3>
-            <img id="previewImage" src="#" alt="Image Preview" style="max-width: 100%; height: auto;">
-        </div>
-
-        <!-- Show Content Button -->
-        <button id="showContentButton" style="margin-top: 20px; display: none;">Show Extracted Content</button>
-
-        <!-- Extracted Content Display -->
-        <div id="extractedContent" style="margin-top: 20px; display: none;">
-            <h3>Extracted Content:</h3>
-            <div id="contentTable"></div> <!-- Table will be inserted here -->
-        </div>
+        <h1>Welcome to the Multi-Tool Application</h1>
+        <nav>
+            <a href="{{ url_for('compress') }}">Compress PDF</a>
+            <a href="{{ url_for('image_to_excel_route') }}">Convert Image to Excel</a>
+        </nav>
     </div>
-
-    <script>
-        // Display the uploaded image
-        document.getElementById('imageFile').addEventListener('change', function (event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    const previewImage = document.getElementById('previewImage');
-                    previewImage.src = e.target.result;
-                    document.getElementById('imagePreview').style.display = 'block';
-                    document.getElementById('showContentButton').style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // Handle form submission
-        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const file = document.getElementById('imageFile').files[0];
-            const formData = new FormData();
-            formData.append('image', file);
-
-            try {
-                const response = await fetch('/upload', {
-                    method: 'POST',
-                    body: formData,
-                });
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'converted_table.xlsx';
-                a.click();
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred while processing the image.');
-            }
-        });
-
-        // Show extracted content
-        document.getElementById('showContentButton').addEventListener('click', async () => {
-            const file = document.getElementById('imageFile').files[0];
-            if (!file) {
-                alert('Please upload an image first.');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('image', file);
-
-            try {
-                const response = await fetch('/extract', {
-                    method: 'POST',
-                    body: formData,
-                });
-                const data = await response.json();
-
-                // Generate and display the table
-                const table = generateTable(data.content);
-                document.getElementById('contentTable').innerHTML = table;
-                document.getElementById('extractedContent').style.display = 'block';
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred while extracting content.');
-            }
-        });
-
-        // Function to generate an HTML table from extracted content
-        function generateTable(content) {
-            const rows = content.split('\n');
-            let table = '<table border="1" cellpadding="10" cellspacing="0">';
-            rows.forEach(row => {
-                table += '<tr>';
-                const columns = row.split(/\s{2,}/); // Split by 2 or more spaces
-                columns.forEach(column => {
-                    table += `<td>${column}</td>`;
-                });
-                table += '</tr>';
-            });
-            table += '</table>';
-            return table;
-        }
-    </script>
 </body>
 </html>
