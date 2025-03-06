@@ -15,6 +15,10 @@ import os
 import secrets
 import uuid
 import subprocess
+import logging
+from logging.handlers import RotatingFileHandler
+
+
 
 # Generate a secure secret key (only do this once and store it securely)
 if not os.environ.get("FLASK_SECRET_KEY"):
@@ -22,6 +26,19 @@ if not os.environ.get("FLASK_SECRET_KEY"):
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY")
+
+# Set up logging
+if not app.debug:
+    file_handler = RotatingFileHandler(
+        "app.log",  # Log file name
+        maxBytes=1024 * 1024,  # 1 MB per file
+        backupCount=10  # Keep up to 10 log files
+    )
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(logging.Formatter(
+        "%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]"
+    ))
+    app.logger.addHandler(file_handler)
 
 # Configure server-side sessions
 app.config["SESSION_TYPE"] = "filesystem"  # Store sessions on the filesystem
@@ -224,7 +241,7 @@ def calculate_reduction_percentage(original_size, compressed_size):
         return 0  # Avoid division by zero
     reduction = ((original_size - compressed_size) / original_size) * 100
     return round(reduction, 2)  # Round to 2 decimal places
-    
+
 @app.route("/")
 def index():
     return render_template("index.html")
