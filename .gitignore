@@ -14,4 +14,6 @@ __pycache__/
 
 # Ignore uploaded images and generated files
 uploads/
+compressed/
+excel_output/
 *.xlsx

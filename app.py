@@ -18,6 +18,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 
+load_dotenv()  # Load environment variables from .env file
 
 # Generate a secure secret key (only do this once and store it securely)
 if not os.environ.get("FLASK_SECRET_KEY"):
@@ -275,7 +276,6 @@ def image_to_excel_route():
 @app.route("/download/<filename>")
 def download_file(filename):
     compressed_path = os.path.join(app.config["COMPRESSED_FOLDER"], filename)
-    print("download")  # Debugging statement
     return send_file(
         compressed_path,
         as_attachment=True,
