@@ -1,5 +1,6 @@
 from flask import Flask, session, request, send_file, render_template, redirect, url_for, jsonify, session
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
 import threading
 import time
 import pytesseract
@@ -8,17 +9,21 @@ import pandas as pd
 import re
 import io
 import cv2
-import numpy as np
-import fitz  # PyMuPDF
 import os
+import numpy as np
+import sys
+# Add the virtual environment site-packages directory to sys.path
+load_dotenv()  # Load environment variables from .env file
+venv_path = os.getenv("VENEPATH")
+if venv_path not in sys.path:
+    sys.path.append(venv_path)
+import fitz  # PyMuPDF
 import secrets
 import uuid
 import subprocess
 import logging
 from logging.handlers import RotatingFileHandler
 
-
-load_dotenv()  # Load environment variables from .env file
 
 # Generate a secure secret key (only do this once and store it securely)
 if not os.environ.get("FLASK_SECRET_KEY"):
@@ -42,17 +47,17 @@ if not app.debug:
 
 
 # Set up folders
-UPLOAD_FOLDER = "uploads"
-COMPRESSED_FOLDER = "compressed"
-EXCEL_FOLDER = "excel_output"
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-app.config["COMPRESSED_FOLDER"] = COMPRESSED_FOLDER
-app.config["EXCEL_FOLDER"] = EXCEL_FOLDER
+uploads = os.getenv("UPLOAD_FOLDER")
+
+compressed = os.getenv("COMPRESSED_FOLDER")
+
+exceled = os.getenv("EXCEL_FOLDER")
+
 
 # Ensure folders exist
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(COMPRESSED_FOLDER, exist_ok=True)
-os.makedirs(EXCEL_FOLDER, exist_ok=True)
+os.makedirs(uploads, exist_ok=True)
+os.makedirs(compressed, exist_ok=True)
+os.makedirs(exceled, exist_ok=True)
 
 def get_file_size(file_path):
     """
@@ -197,7 +202,7 @@ def compress():
             sanitized_filename = sanitize_filename(file.filename)
             
             # Save the uploaded file
-            upload_path = os.path.join(app.config["UPLOAD_FOLDER"], sanitized_filename)
+            upload_path = os.path.join(uploads, sanitized_filename)
             file.save(upload_path)
             
             # Verify the file was saved
@@ -219,10 +224,11 @@ def compress():
                 compress_level = "High"
             else:
                 compress_level = "Unknown"  # Fallback for unexpected values
-            
+            filename_without_ext = file.filename.rstrip(".pdf")
             # Generate a unique name for the compressed file
-            compressed_filename = f"compressed_{compress_level}_{file.filename}.pdf"
-            compressed_path = os.path.join(app.config["COMPRESSED_FOLDER"], compressed_filename)
+            filename_without_ext = file.filename.rstrip(".pdf")
+            compressed_filename = f"compressed_{compress_level}_{filename_without_ext}.pdf"
+            compressed_path = os.path.join(compressed, compressed_filename)
             
             # Compress the PDF with the selected quality
             compress_pdf(upload_path, compressed_path, image_quality=quality)
@@ -257,12 +263,12 @@ def image_to_excel_route():
         
         if file and file.filename.lower().endswith((".png", ".jpg", ".jpeg")):
             # Save the uploaded image
-            upload_path = os.path.join(app.config["UPLOAD_FOLDER"], file.filename)
+            upload_path = os.path.join(uploads, file.filename)
             file.save(upload_path)
             
             # Generate a unique name for the Excel file
             excel_filename = f"output_{uuid.uuid4().hex}.xlsx"
-            excel_path = os.path.join(app.config["EXCEL_FOLDER"], excel_filename)
+            excel_path = os.path.join(exceled, excel_filename)
             
             # Convert image to Excel
             image_to_excel(upload_path, excel_path)
@@ -275,7 +281,7 @@ def image_to_excel_route():
 
 @app.route("/download/<filename>")
 def download_file(filename):
-    compressed_path = os.path.join(app.config["COMPRESSED_FOLDER"], filename)
+    compressed_path = os.path.join(compressed, filename)
     return send_file(
         compressed_path,
         as_attachment=True,
@@ -286,9 +292,9 @@ def download_file(filename):
 @app.route("/download/<type>/<filename>")
 def download(type, filename):
     if type == "pdf":
-        file_path = os.path.join(app.config["COMPRESSED_FOLDER"], filename)
+        file_path = os.path.join(compressed, filename)
     elif type == "excel":
-        file_path = os.path.join(app.config["EXCEL_FOLDER"], filename)
+        file_path = os.path.join(exceled, filename)
     else:
         return "Invalid file type."
     

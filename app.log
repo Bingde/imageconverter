@@ -1,0 +1,18 @@
+2025-03-06 21:42:47,219 ERROR: Exception on /compress [POST] [in /Users/libingzhao/sites/imageconverter/venv/lib/python3.11/site-packages/flask/app.py:1414]
+Traceback (most recent call last):
+  File "/Users/libingzhao/sites/imageconverter/venv/lib/python3.11/site-packages/flask/app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/libingzhao/sites/imageconverter/venv/lib/python3.11/site-packages/flask/app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/libingzhao/sites/imageconverter/venv/lib/python3.11/site-packages/flask/app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/libingzhao/sites/imageconverter/venv/lib/python3.11/site-packages/flask/app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/libingzhao/sites/imageconverter/app.py", line 205, in compress
+    upload_path = os.path.join(app.config["UPLOAD_FOLDER"], sanitized_filename)
+                               ~~~~~~~~~~^^^^^^^^^^^^^^^^^
+KeyError: 'UPLOAD_FOLDER'
