@@ -17,3 +17,4 @@ uploads/
 compressed/
 excel_output/
 *.xlsx
+*.env
